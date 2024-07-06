@@ -21,6 +21,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, BitsAn
 import torch
 from llava.model import *
 from llava.constants import DEFAULT_IMAGE_PATCH_TOKEN, DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN
+from termcolor import cprint
 
 
 def load_pretrained_model(model_path, model_base, model_name, load_8bit=False, load_4bit=False, device_map="auto", device="cuda", use_flash_attn=False, **kwargs):
@@ -62,8 +63,10 @@ def load_pretrained_model(model_path, model_base, model_name, load_8bit=False, l
 
             print('Loading additional LLaVA weights...')
             if os.path.exists(os.path.join(model_path, 'non_lora_trainables.bin')):
+                print('Loading from local file...')
                 non_lora_trainables = torch.load(os.path.join(model_path, 'non_lora_trainables.bin'), map_location='cpu')
             else:
+                print('Loading from HF Hub...')
                 # this is probably from HF Hub
                 from huggingface_hub import hf_hub_download
                 def load_from_hf(repo_id, filename, subfolder=None):
@@ -152,12 +155,16 @@ def load_pretrained_model(model_path, model_base, model_name, load_8bit=False, l
             tokenizer.add_tokens([DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN], special_tokens=True)
         model.resize_token_embeddings(len(tokenizer))
 
-        vision_tower = model.get_vision_tower()
-        if not vision_tower.is_loaded:
-            vision_tower.load_model(device_map=device_map)
-        if device_map != 'auto':
-            vision_tower.to(device=device_map, dtype=torch.float16)
-        image_processor = vision_tower.image_processor
+        if not ('lora' in model_name.lower() and model_base is not None):
+            cprint("Loading vision tower...", "yellow")
+            vision_tower = model.get_vision_tower()
+            if not vision_tower.is_loaded:
+                vision_tower.load_model(device_map=device_map)
+            if device_map != 'auto':
+                vision_tower.to(device=device_map, dtype=torch.float16)
+            image_processor = vision_tower.image_processor
+        else:
+            cprint("LoRA model merging, vision tower is not loaded.", "yellow")
 
     if hasattr(model.config, "max_sequence_length"):
         context_len = model.config.max_sequence_length

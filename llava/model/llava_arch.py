@@ -76,9 +76,9 @@ class LlavaMetaModel:
         self.config.mm_vision_select_feature = mm_vision_select_feature
         self.config.mm_patch_merge_type = mm_patch_merge_type
 
+        print(f"mm_projector: {getattr(self, 'mm_projector', None)}")
         if getattr(self, 'mm_projector', None) is None:
             self.mm_projector = build_vision_projector(self.config)
-
             if 'unpad' in mm_patch_merge_type:
                 embed_std = 1 / torch.sqrt(torch.tensor(self.config.hidden_size, dtype=self.dtype))
                 self.image_newline = nn.Parameter(
@@ -89,6 +89,7 @@ class LlavaMetaModel:
             for p in self.mm_projector.parameters():
                 p.requires_grad = True
 
+        print(f"pretrain_mm_mlp_adapter: {pretrain_mm_mlp_adapter}")
         if pretrain_mm_mlp_adapter is not None:
             mm_projector_weights = torch.load(pretrain_mm_mlp_adapter, map_location='cpu')
             def get_w(weights, keyword):

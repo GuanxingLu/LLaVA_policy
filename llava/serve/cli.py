@@ -112,9 +112,11 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model-path", type=str, default="facebook/opt-350m")
+    # parser.add_argument("--model-path", type=str, default="facebook/opt-350m")
+    parser.add_argument("--model-path", type=str, default="/mnt/disk_1/yiqin/ckpt/llava-v1.5-7b")
     parser.add_argument("--model-base", type=str, default=None)
-    parser.add_argument("--image-file", type=str, required=True)
+    # parser.add_argument("--image-file", type=str, required=True)
+    parser.add_argument("--image-file", type=str, default="/mnt/disk_1/guanxing/home-robot/data/datasets/rl_agent/104862639_172226823_19982/rgb_1.jpg")
     parser.add_argument("--device", type=str, default="cuda")
     parser.add_argument("--conv-mode", type=str, default=None)
     parser.add_argument("--temperature", type=float, default=0.2)
